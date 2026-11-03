@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الطوابير - شاشة العميل</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Cairo Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <!-- Mobile Screen Simulator Container -->
+    <div class="w-full max-w-md bg-slate-800 rounded-3xl shadow-2xl border border-slate-700/60 overflow-hidden flex flex-col min-h-[680px] relative">
+        
+        <!-- Top Status Bar Mockup -->
+        <div class="bg-slate-900/80 px-6 py-2 flex justify-between items-center text-xs text-slate-400 border-b border-slate-700/40">
+            <span>9:41</span>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid font-bold fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-gradient-to-r font-bold from-slate-900 via-slate-800 to-brand-900/60 p-5 border-b border-slate-700/60">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-500 shadow-inner">
+                        <i class="fa-solid fa-hospital text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-extrabold text-white leading-tight">مركز الشفاء الطبي</h1>
+                        <p class="text-xs text-brand-500 flex items-center gap-1 font-medium mt-0.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block"></span>
+                            عيادة العظام والعمود الفقري
+                        </p>
+                    </div>
+                </div>
+                <button class="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="flex-1 p-5 flex flex-col justify-between space-y-4">
+
+            <!-- STEP 1: SERVICE SELECTION (Visible initially or when no ticket) -->
+            <div id="serviceSelectionSection" class="space-y-4 my-auto">
+                <div class="text-center space-y-1">
+                    <span class="bg-brand-500/10 text-brand-500 text-xs px-3 py-1 rounded-full font-bold inline-block border border-brand-500/20">
+                        مرحباً بك
+                    </span>
+                    <h2 class="text-xl font-bold text-white">اختر الخدمة المطلوبة للحجز</h2>
+                    <p class="text-xs text-slate-400">سيتم إصدار تذكرتك الرقمية الحية فوراً</p>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <!-- Service 1 -->
+                    <button onclick="issueTicket('كشف جديد', 'A')" class="w-full bg-slate-700/40 hover:bg-brand-600/20 hover:border-brand-500/60 border border-slate-600/50 p-4 rounded-2xl flex items-center justify-between transition-all group text-right">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300 group-hover:text-brand-500 group-hover:border-brand-500/40 transition">
+                                <i class="fa-solid fa-stethoscope"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-sm group-hover:text-brand-500 transition">كشف طبي جديد</h3>
+                                <p class="text-xs text-slate-400">فحص شامل وطبي المعاينة</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-left text-slate-500 group-hover:text-brand-500 group-hover:-translate-x-1 transition"></i>
+                    </button>
+
+                    <!-- Service 2 -->
+                    <button onclick="issueTicket('استشارة ومراجعة', 'B')" class="w-full bg-slate-700/40 hover:bg-brand-600/20 hover:border-brand-500/60 border border-slate-600/50 p-4 rounded-2xl flex items-center justify-between transition-all group text-right">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300 group-hover:text-brand-500 group-hover:border-brand-500/40 transition">
+                                <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-sm group-hover:text-brand-500 transition">مراجعة أو متابعة</h3>
+                                <p class="text-xs text-slate-400">قراءة الفحوصات والاستشارات</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-left text-slate-500 group-hover:text-brand-500 group-hover:-translate-x-1 transition"></i>
+                    </button>
+
+                    <!-- Service 3 -->
+                    <button onclick="issueTicket('استلام نتائج وأشعة', 'C')" class="w-full bg-slate-700/40 hover:bg-brand-600/20 hover:border-brand-500/60 border border-slate-600/50 p-4 rounded-2xl flex items-center justify-between transition-all group text-right">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-300 group-hover:text-brand-500 group-hover:border-brand-500/40 transition">
+                                <i class="fa-solid fa-file-waveform"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-sm group-hover:text-brand-500 transition">استلام نتائج التحاليل</h3>
+                                <p class="text-xs text-slate-400">تقارير الأشعة والتحاليل</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-left text-slate-500 group-hover:text-brand-500 group-hover:-translate-x-1 transition"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: LIVE DIGITAL TICKET (Hidden initially) -->
+            <div id="ticketCardSection" class="hidden space-y-4">
+                
+                <!-- Ticket Main Box -->
+                <div id="ticketMainBox" class="bg-gradient-to-b from-slate-800 to-slate-800/90 border-2 border-brand-500/40 rounded-3xl p-5 shadow-xl relative overflow-hidden transition-all duration-500">
+                    
+                    <!-- Decorative Background Glow -->
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
+
+                    <!-- Top Status Badge -->
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="serviceBadge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">
+                            كشف جديد
+                        </span>
+                        <div id="statusBadge" class="flex items-center space-x-1.5 space-x-reverse bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-3 py-1 rounded-full font-bold">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            <span id="statusText">قيد الانتظار</span>
+                        </div>
+                    </div>
+
+                    <!-- Ticket Number Display -->
+                    <div class="text-center py-2 my-1 border-y border-slate-700/60">
+                        <span class="text-xs text-slate-400 font-semibold block mb-1">رقم الدور الخاص بك</span>
+                        <h2 id="ticketNumber" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-teal-300 to-emerald-400 tracking-wider">
+                            #A-14
+                        </h2>
+                        <span class="text-[11px] text-slate-400 block mt-1">تاريخ الحجز: اليوم 09:42 ص</span>
+                    </div>
+
+                    <!-- Live Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <!-- Metric 1: ETA -->
+                        <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
+                            <i class="fa-regular fa-clock text-brand-500 mb-1 text-sm"></i>
+                            <span class="text-[11px] text-slate-400 block">وقت الانتظار التقديري</span>
+                            <div id="timerDisplay" class="text-xl font-bold text-white mt-0.5">14:58 د</div>
+                        </div>
+
+                        <!-- Metric 2: Queue Position -->
+                        <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
+                            <i class="fa-solid fa-users text-indigo-400 mb-1 text-sm"></i>
+                            <span class="text-[11px] text-slate-400 block">قبلك في الطابور</span>
+                            <div id="queueCount" class="text-xl font-bold text-indigo-300 mt-0.5">3 مراجعين</div>
+                        </div>
+                    </div>
+
+                    <!-- Live Notice Banner -->
+                    <div id="noticeBanner" class="mt-4 p-3 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-xs text-brand-300 flex items-center space-x-2.5 space-x-reverse">
+                        <i class="fa-solid fa-circle-info text-brand-500 text-sm"></i>
+                        <span id="noticeText">يتم تحديث الوقت تلقائياً بناءً على متوسط مدة الكشف.</span>
+                    </div>
+                </div>
+
+                <!-- Action / QRCode Options -->
+                <div class="bg-slate-800/60 border border-slate-700/40 rounded-2xl p-3 flex items-center justify-between text-xs text-slate-300">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-solid fa-qrcode text-lg text-slate-400"></i>
+                        <span>رمز التأكيد والمتابعة</span>
+                    </div>
+                    <button onclick="resetTicket()" class="text-rose-400 hover:text-rose-300 font-bold transition">
+                        إلغاء التذكرة
+                    </button>
+                </div>
+            </div>
+
+            <!-- SIMULATION CONTROLS (For Testing/Demo Purpose) -->
+            <div class="mt-auto pt-3 border-t border-slate-700/60">
+                <p class="text-[11px] font-bold text-slate-400 mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-flask text-amber-400 ml-1"></i>لوحة محاكاة حالات النظام (للتجربة):</span>
+                </p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="simStep(1)" class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 px-2 rounded-xl text-center font-medium transition">
+                        1. اقتراب الدور
+                    </button>
+                    <button onclick="simStep(2)" class="bg-brand-600 hover:bg-brand-500 text-white py-2 px-2 rounded-xl text-center font-bold transition shadow-lg shadow-brand-600/30">
+                        2. حان دورك الآن!
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <footer class="bg-slate-900 px-6 py-3 border-t border-slate-800 flex justify-around text-slate-400 text-xs">
+            <button class="flex flex-col items-center text-brand-500 font-bold">
+                <i class="fa-solid fa-ticket text-base mb-1"></i>
+                <span>تذكرتي</span>
+            </button>
+            <button class="flex flex-col items-center hover:text-slate-200 transition">
+                <i class="fa-solid fa-location-dot text-base mb-1"></i>
+                <span>الموقع</span>
+            </button>
+            <button class="flex flex-col items-center hover:text-slate-200 transition">
+                <i class="fa-solid fa-headset text-base mb-1"></i>
+                <span>المساعدة</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- JavaScript Interactive Logic -->
+    <!-- JavaScript Interactive Logic -->
+    <script>
+        let countdownInterval = null;
+        let totalSeconds = 898; // 14 mins 58 seconds
+
+        function issueTicket(serviceName, prefix) {
+            document.getElementById('serviceSelectionSection').classList.add('hidden');
+            document.getElementById('ticketCardSection').classList.remove('hidden');
+
+            document.getElementById('serviceBadge').innerText = serviceName;
+
+            // Generate Random Ticket Number (1 to 8)
+            const randomNum = Math.floor(Math.random() * 8) + 1;
+            document.getElementById('ticketNumber').innerText = `#${prefix}-${randomNum}`;
+
+            startTimer();
+
+            // الاتصال بالخادم عند حجز التذكرة
+            fetch('http://localhost:5000/api/tickets/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    clinicId: 1,
+                    serviceName: serviceName,
+                    prefix: prefix
+                })
+            })
+            .then(response => response.text())
+            .then(data => console.log('رد الخادم:', data))
+            .catch(error => console.error('خطأ في الاتصال:', error));
+        }
+
+        function issueticket(serviceName, prefix) {
+            // دالة احتياطية بنفس الاسم بالحروف الصغيرة لمنع أي أخطاء
+            issueTicket(serviceName, prefix);
+        }
+
+        function startTimer() {
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                if (totalSeconds > 0) {
+                    totalSeconds--;
+                    const mins = Math.floor(totalSeconds / 60);
+                    const secs = totalSeconds % 60;
+                    const timerDisplay = document.getElementById('timerDisplay');
+                    if (timerDisplay) {
+                        timerDisplay.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs} د`;
+                    }
+                }
+            }, 1000);
+        }
+
+        function resetTicket() {
+            clearInterval(countdownInterval);
+            totalSeconds = 898;
+            document.getElementById('ticketCardSection').classList.add('hidden');
+            document.getElementById('serviceSelectionSection').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

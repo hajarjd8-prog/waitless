@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم العيادة - نظام إدارة الطوابير</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <!-- الهيدر -->
+        <header class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400">عيادة د. أسامة (الأسنان)</h1>
+                <p class="text-xs text-slate-400">لوحة التحكم والاستدعاء اللحظي</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
+                <span class="text-xs text-emerald-400 font-medium">متصل بالخادم</span>
+            </div>
+        </header>
+
+        <!-- البطاقة الرئيسية: العميل الحالي -->
+        <main class="bg-slate-800/90 rounded-2xl p-6 border border-slate-700 shadow-xl text-center space-y-6">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-xs">
+                في العيادة الآن
+            </span>
+            
+            <div class="space-y-2">
+                <div class="text-6xl font-extrabold text-emerald-400 tracking-wider">#A-14</div>
+                <div class="text-lg text-slate-300">العميل: أحمد المحمدي</div>
+                <div class="text-sm text-slate-400">الخدمة: كشف جديد</div>
+            </div>
+
+            <!-- أزرار التحكم -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4">
+                <button class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95">
+                    📞 استدعاء التالي (#A-15)
+                </button>
+                <button class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 px-4 rounded-xl border border-slate-600 transition">
+                    🔔 إعادة تنبيه
+                </button>
+                <button class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium py-3 px-4 rounded-xl border border-rose-500/30 transition">
+                    ⏭️ تخطي / غياب
+                </button>
+            </div>
+        </main>
+
+        <!-- قائمة الانتظار الحالية -->
+        <section class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+            <h2 class="text-md font-bold mb-4 text-slate-200 flex items-center gap-2">
+                <span>📋</span> القادمون في الانتظار (3 مراجعين)
+            </h2>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <div>
+                        <span class="font-bold text-emerald-400 ml-3">#A-15</span>
+                        <span class="text-sm text-slate-300">سارة Al-أحمد</span>
+                    </div>
+                    <span class="text-xs text-slate-400">وقت الانتظار: ~10 دقائق</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                    <div>
+                        <span class="font-bold text-emerald-400 ml-3">#A-16</span>
+                        <span class="text-sm text-slate-300">عمر الفاسي</span>
+                    </div>
+                    <span class="text-xs text-slate-400">وقت الانتظار: ~20 دقيقة</span>
+                </div>
+            </div>
+        </section>
+    </div>
+<!-- استدعاء مكتبة Socket.io للربط اللحظي -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    const socket = io();
+    const clinicId = "1"; // معرف العيادة الحالي
+
+    // الانضمام لغرفة العيادة فور فتح الصفحة
+    socket.emit('join_clinic', clinicId);
+
+    // الاستماع لأي تحديثات فورية تطرأ على الطابور
+    socket.on('queue_updated', (data) => {
+        console.log('تم تحديث الطابور:', data);
+        if (data.action === 'NEW_TICKET' || data.action === 'CALL_NEXT') {
+            location.reload(); // تحديث الصفحة لتظهر البيانات الجديدة فوراً
+        }
+    });
+
+    // ربط زر "استدعاء التالي" بإرسال طلب للباك اند
+    document.querySelector('button.bg-emerald-600').addEventListener('click', async () => {
+    try {
+        const response = await fetch('/api/clinics/1/call-next', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const text = await response.text(); // قراءة الاستجابة كنص أولاً للتأكد
+        const result = text ? JSON.parse(text) : {};
+
+        if (response.ok && result.success) {
+            alert('تم استدعاء المريض التالي بنجاح!');
+            location.reload();
+        } else {
+            alert(result.message || 'لا يوجد مرضى في الانتظار حالياً');
+        }
+    } catch (error) {
+        console.error('خطأ في الاتصال بالخادم:', error);
+        alert('حدث خطأ أثناء الاتصال بالخادم');
+    }
+});
+</script>
+</body>
+</html>
