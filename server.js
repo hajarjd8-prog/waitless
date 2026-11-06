@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/client.html');
+    res.sendFile(__dirname + '/client');
 });
 
 // POST /api/tickets/book
