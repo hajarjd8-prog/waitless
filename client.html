@@ -253,7 +253,7 @@
             startTimer();
 
             // الاتصال بالخادم عند حجز التذكرة
-            fetch('https://waitless-production-7059.up.railway.app', {
+            fetch('./api/tickets/book', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
