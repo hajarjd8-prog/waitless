@@ -46,8 +46,8 @@ app.post('/api/tickets/book', async (req, res) => {
 });
 
 // مسار استدعاء المريض التالي
-app.post('/api/clinics/:id/call-next', async (req, res) => {
-  const clinicId = req.params.id;
+app.post('/api/clinics/:clinicId/call-next', async (req, res) => {
+  const clinicId = req.params.clinicId;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
