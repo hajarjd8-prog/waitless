@@ -13,7 +13,6 @@ app.use(express.json());
 
 // POST /api/tickets/book
 app.post('/api/tickets/book', async (req, res) => {
-  try {
   const { clinicId, patientName, serviceId } = req.body;
   const client = await pool.connect();
   try {
