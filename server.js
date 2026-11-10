@@ -91,7 +91,10 @@ app.get('/api/clinics/:clinicId/queue', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
+// إعادة تفعيل مسار فتح لوحة التحكم كما كان سابقاً
+app.get('/dashboard', (req, res) => {
+    res.sendFile(__dirname + '/dashboard.html');
+});
 // 3. تشغيل السيرفر في النهاية
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => {
