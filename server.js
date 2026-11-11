@@ -114,3 +114,17 @@ app.get('/api/clinics/:clinicId/queue', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+// 1. عند فتح الرابط الرئيسي للموقع، توجيه العميل لصفحة الحجز
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/client.html');
+});
+
+// 2. مسار فتح لوحة التحكم
+app.get('/dashboard', (req, res) => {
+    res.sendFile(__dirname + '/dashboard.html');
+});
+
+// 3. مسار فتح صفحة العميل
+app.get('/client', (req, res) => {
+    res.sendFile(__dirname + '/client.html');
+});

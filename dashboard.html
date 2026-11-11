@@ -148,6 +148,27 @@ async function fetchQueueData() {
 
 // استدعاء الدالة فور فتح الصفحة
 fetchQueueData();
+async function fetchQueueData() {
+    try {
+        // 
+        const response = await fetch(`/api/clinics/${clinicId}/queue`);
+        const data = await response.json();
+        
+        if (data.success && data.queue) {
+            const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue[0];
+            
+            if (currentPatient) {
+                const ticketNumElement = document.querySelector('main .text-6xl');
+                const patientNameElement = document.querySelector('main .text-lg');
+                if (ticketNumElement) ticketNumElement.textContent = `#${currentPatient.ticket_number || currentPatient.sequence_num}`;
+                if (patientNameElement) patientNameElement.textContent = `العميل: ${currentPatient.patient_name || 'مريض'}`;
+            }
+        }
+    } catch (error) {
+        console.error('خطأ أثناء جلب قائمة الانتظار:', error);
+    }
+}
+fetchQueueData();
 </script>
 </body>
 </html>
