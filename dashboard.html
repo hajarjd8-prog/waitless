@@ -118,6 +118,9 @@
                 const ticketNumElement = document.getElementById('currentTicketNum');
                 const patientNameElement = document.getElementById('currentPatientName');
                 const serviceElement = document.getElementById('currentService');
+if (serviceElement) {
+    serviceElement.textContent = `الخدمة: ${currentPatient.service_name || 'كشف جديد'}`;
+}
 
                 if (currentPatient) {
                     const ticketNum = currentPatient.ticket_number || currentPatient.sequence_num || '--';
@@ -140,7 +143,7 @@
                 if (callNextBtn) {
                     if (nextPatient) {
                         const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
-                        callNextBtn.textContent = `📞 استدعاء التالي (#${nextNum})`;
+                        callNextBtn.textContent = `📞 استدعاء التالي #${nextNum}`;
                     } else {
                         callNextBtn.textContent = `📞 استدعاء التالي (لا يوجد منتظرين)`;
                     }

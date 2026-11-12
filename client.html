@@ -339,18 +339,17 @@
                 peopleAheadEl.textContent = `${waitingCount} مراجعين`;
             }
 
-            const averageMinutesPerPatient = 10; 
-            const estimatedMinutes = waitingCount * averageMinutesPerPatient;
-            
-            const timerDisplayEl = document.querySelector('#timerDisplay');
-            if (timerDisplayEl) {
-                if (waitingCount === 0) {
-                    timerDisplayEl.textContent = `دورك الآن!`;
-                } else {
-                    timerDisplayEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
-                }
-            }
-        }
+const waitingCount = ticketData.people_ahead !== undefined ? ticketData.people_ahead : 0;
+const estimatedMinutes = waitingCount * 10;
+
+const timerDisplayEl = document.getElementById('timerDisplay');
+if (timerDisplayEl) {
+    if (waitingCount === 0) {
+        timerDisplayEl.textContent = `دورك الآن!`;
+    } else {
+        timerDisplayEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
+    }
+}
     </script>
 </body>
 </html>
