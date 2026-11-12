@@ -16,7 +16,7 @@
         <!-- الهيدر -->
         <header class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
             <div>
-                <h1 class="text-xl font-bold text-emerald-400">عيادة د. أسامة (الأسنان)</h1>
+                <h1 class="text-xl font-bold text-emerald-400">مركز الشفاء الطبي - عيادة الأسنان</h1>
                 <p class="text-xs text-slate-400">لوحة التحكم والاستدعاء اللحظي</p>
             </div>
             <div class="flex items-center gap-2">
@@ -32,15 +32,15 @@
             </span>
             
             <div class="space-y-2">
-                <div class="text-6xl font-extrabold text-emerald-400 tracking-wider">#A-14</div>
-                <div class="text-lg text-slate-300">العميل: أحمد المحمدي</div>
-                <div class="text-sm text-slate-400">الخدمة: كشف جديد</div>
+                <div id="currentTicketNum" class="text-6xl font-extrabold text-emerald-400 tracking-wider"><span dir="ltr">#--</span></div>
+                <div id="currentPatientName" class="text-lg text-slate-300">العميل: --</div>
+                <div id="currentService" class="text-sm text-slate-400">الخدمة: --</div>
             </div>
 
             <!-- أزرار التحكم -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4">
-                <button class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95">
-                    📞 استدعاء التالي (#A-15)
+                <button id="callNextBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95">
+                    📞 استدعاء التالي
                 </button>
                 <button class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 px-4 rounded-xl border border-slate-600 transition">
                     🔔 إعادة تنبيه
@@ -53,27 +53,15 @@
 
         <!-- قائمة الانتظار الحالية -->
         <section class="bg-slate-800 rounded-xl p-5 border border-slate-700">
-            <h2 class="text-md font-bold mb-4 text-slate-200 flex items-center gap-2">
-                <span>📋</span> القادمون في الانتظار (3 مراجعين)
+            <h2 id="queueTitle" class="text-md font-bold mb-4 text-slate-200 flex items-center gap-2">
+                <span>📋</span> القادمون في الانتظار (0 مراجعين)
             </h2>
-            <div class="space-y-2">
-                <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
-                    <div>
-                        <span class="font-bold text-emerald-400 ml-3">#A-15</span>
-                        <span class="text-sm text-slate-300">سارة Al-أحمد</span>
-                    </div>
-                    <span class="text-xs text-slate-400">وقت الانتظار: ~10 دقائق</span>
-                </div>
-                <div class="flex justify-between items-center p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
-                    <div>
-                        <span class="font-bold text-emerald-400 ml-3">#A-16</span>
-                        <span class="text-sm text-slate-300">عمر الفاسي</span>
-                    </div>
-                    <span class="text-xs text-slate-400">وقت الانتظار: ~20 دقيقة</span>
-                </div>
+            <div id="waitingListContainer" class="space-y-2">
+                <!-- يتم تعبئتها ديناميكياً من الخادم -->
             </div>
         </section>
     </div>
+
 <!-- استدعاء مكتبة Socket.io للربط اللحظي -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
@@ -86,96 +74,117 @@
     // الاستماع لأي تحديثات فورية تطرأ على الطابور
     socket.on('queue_updated', (data) => {
         console.log('تم تحديث الطابور:', data);
-        if (data.action === 'NEW_TICKET' || data.action === 'CALL_NEXT') {
-            location.reload(); // تحديث الصفحة لتظهر البيانات الجديدة فوراً
-        }
+        fetchQueueData();
     });
 
     // ربط زر "استدعاء التالي" بإرسال طلب للباك اند
-    document.querySelector('button.bg-emerald-600').addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/clinics/1/call-next', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const text = await response.text(); // قراءة الاستجابة كنص أولاً للتأكد
-        const result = text ? JSON.parse(text) : {};
+    document.getElementById('callNextBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`/api/clinics/${clinicId}/call-next`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const text = await response.text();
+            const result = text ? JSON.parse(text) : {};
 
-        if (response.ok && result.success) {
-            alert('تم استدعاء المريض التالي بنجاح!');
-            location.reload();
-        } else {
-            alert(result.message || 'لا يوجد مرضى في الانتظار حالياً');
+            if (response.ok && result.success) {
+                alert('تم استدعاء المريض التالي بنجاح!');
+                fetchQueueData();
+            } else {
+                alert(result.message || 'لا يوجد مرضى في الانتظار حالياً');
+            }
+        } catch (error) {
+            console.error('خطأ في الاتصال بالخادم:', error);
+            alert('حدث خطأ أثناء الاتصال بالخادم');
         }
-    } catch (error) {
-        console.error('خطأ في الاتصال بالخادم:', error);
-        alert('حدث خطأ أثناء الاتصال بالخادم');
-    }
-});
+    });
 
-// استدعاء الدالة فور فتح الصفحة
-fetchQueueData();
-async function fetchQueueData() {
-    try {
-        const response = await fetch(`/api/clinics/${clinicId}/queue`);
-        const data = await response.json();
-        
-        if (data.success && data.queue) {
-            // 1. العميل الحالي في العيادة
-            const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue[0];
+    // جلب بيانات الطابور وتحديث الواجهة بالكامل بشكل دقيق
+    async function fetchQueueData() {
+        try {
+            const response = await fetch(`/api/clinics/${clinicId}/queue`);
+            const data = await response.json();
             
-            // 2. المريض التالي في الانتظار
-const waitingPatients = data.queue.filter(t => t.status === 'waiting');
-// التأكد من أن المريض التالي ليس هو نفسه العميل الحالي
-const nextPatient = waitingPatients.length > 0 ? waitingPatients[0] : null;
+            if (data.success && data.queue) {
+                // 1. العميل الحالي في العيادة
+                const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue.find(t => t.status === 'serving') || data.queue[0];
+                
+                // 2. قائمة الانتظار الحقيقية (استبعاد العميل الحالي)
+                const waitingPatients = data.queue.filter(t => t.status === 'waiting');
+                const nextPatient = waitingPatients.length > 0 ? waitingPatients[0] : null;
 
-const callNextBtn = document.querySelector('button.bg-emerald-600');
-if (callNextBtn) {
-    if (nextPatient) {
-        const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
-        callNextBtn.textContent = `استدعاء التالي (#${nextNum})`;
-    } else {
-        callNextBtn.textContent = `استدعاء التالي (لا يوجد منتظرين)`;
-    }
-}
-            
-            // تحديث واجهة العميل الحالي
-            if (currentPatient) {
-                const ticketNumElement = document.querySelector('main .text-6xl');
-                const patientNameElement = document.querySelector('main .text-lg');
-                if (ticketNumElement) {
-                    ticketNumElement.textContent = `#${currentPatient.ticket_number || currentPatient.sequence_num}`;
-                }
-                if (patientNameElement) {
+                // تحديث واجهة العميل الحالي
+                const ticketNumElement = document.getElementById('currentTicketNum');
+                const patientNameElement = document.getElementById('currentPatientName');
+                const serviceElement = document.getElementById('currentService');
+
+                if (currentPatient) {
+                    const ticketNum = currentPatient.ticket_number || currentPatient.sequence_num || '--';
+                    if (ticketNumElement) ticketNumElement.innerHTML = `<span dir="ltr">#${ticketNum}</span>`;
+                    
                     const realName = currentPatient.patient_name && currentPatient.patient_name.trim() !== "" 
                         ? currentPatient.patient_name 
                         : 'مريض';
-                    patientNameElement.textContent = `العميل: ${realName}`;
-                }
-            } else {
-                const ticketNumElement = document.querySelector('main .text-6xl');
-                const patientNameElement = document.querySelector('main .text-lg');
-                if (ticketNumElement) ticketNumElement.textContent = `--`;
-                if (patientNameElement) patientNameElement.textContent = `العميل: لا يوجد منتظرين حالياً`;
-            }
-
-            // تحديث نص زر "استدعاء التالي" برقم التذكرة القادمة ديناميكياً
-            const callNextBtn = document.querySelector('button.bg-emerald-600'); // أو محدد زر الاستدعاء لديك
-            if (callNextBtn) {
-                if (nextPatient) {
-                    const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
-                    callNextBtn.textContent = `استدعاء التالي (#${nextNum})`;
+                    if (patientNameElement) patientNameElement.textContent = `العميل: ${realName}`;
+                    
+                    if (serviceElement) serviceElement.textContent = `الخدمة: ${currentPatient.service_name || 'كشف جديد'}`;
                 } else {
-                    callNextBtn.textContent = `استدعاء التالي (لا يوجد منتظرين)`;
+                    if (ticketNumElement) ticketNumElement.innerHTML = `<span dir="ltr">#--</span>`;
+                    if (patientNameElement) patientNameElement.textContent = `العميل: لا يوجد مراجع حالياً`;
+                    if (serviceElement) serviceElement.textContent = `الخدمة: --`;
+                }
+
+                // تحديث نص وزر "استدعاء التالي" برقم التذكرة القادمة
+                const callNextBtn = document.getElementById('callNextBtn');
+                if (callNextBtn) {
+                    if (nextPatient) {
+                        const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
+                        callNextBtn.textContent = `📞 استدعاء التالي (#${nextNum})`;
+                    } else {
+                        callNextBtn.textContent = `📞 استدعاء التالي (لا يوجد منتظرين)`;
+                    }
+                }
+
+                // تحديث قائمة الانتظار بصرياً بالأسماء والأرقام الحقيقية
+                const waitingContainer = document.getElementById('waitingListContainer');
+                const queueTitle = document.getElementById('queueTitle');
+                
+                if (queueTitle) {
+                    queueTitle.innerHTML = `<span>📋</span> القادمون في الانتظار (${waitingPatients.length} مراجعين)`;
+                }
+
+                if (waitingContainer) {
+                    waitingContainer.innerHTML = '';
+                    if (waitingPatients.length === 0) {
+                        waitingContainer.innerHTML = `<div class="p-3 text-center text-slate-500 text-sm">لا توجد حجزات في الانتظار حالياً</div>`;
+                    } else {
+                        waitingPatients.forEach((p, index) => {
+                            const pNum = p.ticket_number || p.sequence_num;
+                            const pName = p.patient_name && p.patient_name.trim() !== "" ? p.patient_name : 'مراجع';
+                            const estTime = (index + 1) * 10; // تقدير 10 دقائق لكل مريض قبله
+
+                            const item = document.createElement('div');
+                            item.className = "flex justify-between items-center p-3 bg-slate-900/60 rounded-lg border border-slate-700/50";
+                            item.innerHTML = `
+                                <div>
+                                    <span class="font-bold text-emerald-400 ml-3" dir="ltr">#${pNum}</span>
+                                    <span class="text-sm text-slate-300">${pName}</span>
+                                </div>
+                                <span class="text-xs text-slate-400">وقت الانتظار: ~${estTime} دقائق</span>
+                            `;
+                            waitingContainer.appendChild(item);
+                        });
+                    }
                 }
             }
+        } catch (error) {
+            console.error('خطأ أثناء جلب قائمة الانتظار:', error);
         }
-    } catch (error) {
-        console.error('خطأ أثناء جلب قائمة الانتظار:', error);
     }
-}
-fetchQueueData();
+
+    // جلب البيانات فور تحميل الصفحة
+    fetchQueueData();
 </script>
 </body>
 </html>

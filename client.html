@@ -80,7 +80,7 @@
         <!-- Main Content Container -->
         <main class="flex-1 p-5 flex flex-col justify-between space-y-4">
 
-            <!-- STEP 1: SERVICE SELECTION (Visible initially or when no ticket) -->
+            <!-- STEP 1: SERVICE SELECTION -->
             <div id="serviceSelectionSection" class="space-y-4 my-auto">
                 <div class="text-center space-y-1">
                     <span class="bg-brand-500/10 text-brand-500 text-xs px-3 py-1 rounded-full font-bold inline-block border border-brand-500/20">
@@ -135,45 +135,36 @@
                 </div>
             </div>
 
-            <!-- STEP 2: LIVE DIGITAL TICKET (Hidden initially) -->
+            <!-- STEP 2: LIVE DIGITAL TICKET -->
             <div id="ticketCardSection" class="hidden space-y-4">
-                
-                <!-- Ticket Main Box -->
-                <div id="ticketMainBox" class="bg-gradient-to-b from-slate-800 to-slate-800/90 border-2 border-brand-500/40 rounded-3xl p-5 shadow-xl relative overflow-hidden transition-all duration-500">
-                    
-                    <!-- Decorative Background Glow -->
+                <div class="bg-gradient-to-b from-slate-800 to-slate-800/90 border-2 border-brand-500/40 rounded-3xl p-5 shadow-xl relative overflow-hidden transition-all duration-500">
                     <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
 
-                    <!-- Top Status Badge -->
                     <div class="flex justify-between items-center mb-4">
-                        <span id="serviceBadge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">
-                            كشف جديد
-                        </span>
+                        <span id="serviceBadge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">كشف جديد</span>
                         <div id="statusBadge" class="flex items-center space-x-1.5 space-x-reverse bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-3 py-1 rounded-full font-bold">
                             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             <span id="statusText">قيد الانتظار</span>
                         </div>
                     </div>
 
-                    <!-- Ticket Number Display -->
+                    <!-- Ticket Number Display with LTR fix -->
                     <div class="text-center py-2 my-1 border-y border-slate-700/60">
                         <span class="text-xs text-slate-400 font-semibold block mb-1">رقم الدور الخاص بك</span>
                         <h2 id="ticketNumber" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-teal-300 to-emerald-400 tracking-wider">
-                            #A-14
+                            <span dir="ltr">#A-14</span>
                         </h2>
-                        <span class="text-[11px] text-slate-400 block mt-1">تاريخ الحجز: اليوم 09:42 ص</span>
+                        <span class="text-[11px] text-slate-400 block mt-1">تاريخ الحجز: اليوم</span>
                     </div>
 
                     <!-- Live Metrics Grid -->
                     <div class="grid grid-cols-2 gap-3 mt-4">
-                        <!-- Metric 1: ETA -->
                         <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
                             <i class="fa-regular fa-clock text-brand-500 mb-1 text-sm"></i>
                             <span class="text-[11px] text-slate-400 block">وقت الانتظار التقديري</span>
-                            <div id="waitTime" class="text-xl font-bold text-white mt-0.5">14:58 د</div>
+                            <div id="timerDisplay" class="text-xl font-bold text-white mt-0.5">14:58 د</div>
                         </div>
 
-                        <!-- Metric 2: Queue Position -->
                         <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
                             <i class="fa-solid fa-users text-indigo-400 mb-1 text-sm"></i>
                             <span class="text-[11px] text-slate-400 block">قبلك في الطابور</span>
@@ -181,26 +172,24 @@
                         </div>
                     </div>
 
-                    <!-- Live Notice Banner -->
                     <div id="noticeBanner" class="mt-4 p-3 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-xs text-brand-300 flex items-center space-x-2.5 space-x-reverse">
                         <i class="fa-solid fa-circle-info text-brand-500 text-sm"></i>
                         <span id="noticeText">يتم تحديث الوقت تلقائياً بناءً على متوسط مدة الكشف.</span>
                     </div>
                 </div>
 
-                <!-- Action / QRCode Options -->
                 <div class="bg-slate-800/60 border border-slate-700/40 rounded-2xl p-3 flex items-center justify-between text-xs text-slate-300">
                     <div class="flex items-center space-x-2 space-x-reverse">
                         <i class="fa-solid fa-qrcode text-lg text-slate-400"></i>
                         <span>رمز التأكيد والمتابعة</span>
                     </div>
                     <button id="cancel-ticket-btn" class="text-rose-400 hover:text-rose-300 font-bold">
-                       إلغاء التذكرة
+                        إلغاء التذكرة
                     </button>
                 </div>
             </div>
 
-            <!-- SIMULATION CONTROLS (For Testing/Demo Purpose) -->
+            <!-- SIMULATION CONTROLS -->
             <div class="mt-auto pt-3 border-t border-slate-700/60">
                 <p class="text-[11px] font-bold text-slate-400 mb-2 flex items-center justify-between">
                     <span><i class="fa-solid fa-flask text-amber-400 ml-1"></i>لوحة محاكاة حالات النظام (للتجربة):</span>
@@ -214,7 +203,6 @@
                     </button>
                 </div>
             </div>
-
         </main>
 
         <!-- Bottom Navigation Bar -->
@@ -235,10 +223,9 @@
     </div>
 
     <!-- JavaScript Interactive Logic -->
-    <!-- JavaScript Interactive Logic -->
     <script>
         let countdownInterval = null;
-        let totalSeconds = 898; // 14 mins 58 seconds
+        let totalSeconds = 898;
 
         function issueTicket(serviceName, prefix) {
             document.getElementById('serviceSelectionSection').classList.add('hidden');
@@ -246,13 +233,14 @@
 
             document.getElementById('serviceBadge').innerText = serviceName;
 
-            // Generate Random Ticket Number (1 to 8)
             const randomNum = Math.floor(Math.random() * 8) + 1;
-            document.getElementById('ticketNumber').innerText = `#${prefix}-${randomNum}`;
+            const ticketNumEl = document.getElementById('ticketNumber');
+            if (ticketNumEl) {
+                ticketNumEl.innerHTML = `<span dir="ltr">#${prefix}-${randomNum}</span>`;
+            }
 
             startTimer();
 
-            // الاتصال بالخادم عند حجز التذكرة
             fetch('./api/tickets/book', {
                 method: 'POST',
                 headers: {
@@ -264,19 +252,17 @@
                     prefix: prefix
                 })
             })
-           .then(response => response.json())
-    .then(data => {
-        console.log('رد الخادم:', data);
-        if (data.success && data.ticket) {
-            // تخزين معرف التذكرة هنا لتمكين العميل من إلغائها لاحقاً
-            localStorage.setItem('currentTicketId', data.ticket.id);
-        }
-    })
-    .catch(error => console.error('خطأ في الاتصال:', error));
+            .then(response => response.json())
+            .then(data => {
+                console.log('رد الخادم:', data);
+                if (data.success && data.ticket) {
+                    localStorage.setItem('currentTicketId', data.ticket.id);
+                }
+            })
+            .catch(error => console.error('خطأ في الاتصال:', error));
         }
 
         function issueticket(serviceName, prefix) {
-            // دالة احتياطية بنفس الاسم بالحروف الصغيرة لمنع أي أخطاء
             issueTicket(serviceName, prefix);
         }
 
@@ -301,74 +287,70 @@
             document.getElementById('ticketCardSection').classList.add('hidden');
             document.getElementById('serviceSelectionSection').classList.remove('hidden');
         }
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cancelBtn = document.querySelector('#cancel-ticket-btn'); 
-        
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', async () => {
-                const ticketId = localStorage.getItem('currentTicketId');
-                
-                if (!ticketId) {
-                    alert('لا توجد تذكرة نشطة حالياً لإلغائها');
-                    return;
-                }
 
-                if (!confirm('هل أنت متأكد من رغبتك في إلغاء التذكرة؟')) return;
-
-                try {
-                    const response = await fetch('/api/tickets/cancel', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ticketId })
-                    });
+        document.addEventListener('DOMContentLoaded', () => {
+            const cancelBtn = document.querySelector('#cancel-ticket-btn'); 
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', async () => {
+                    const ticketId = localStorage.getItem('currentTicketId');
                     
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('تم إلغاء التذكرة بنجاح');
-                        localStorage.removeItem('currentTicketId'); // مسح المعرف بعد الإلغاء
-                        location.reload(); // تحديث الصفحة
-                    } else {
-                        alert('فشل إلغاء التذكرة: ' + (result.message || 'خطأ غير معروف'));
+                    if (!ticketId) {
+                        alert('لا توجد تذكرة نشطة حالياً لإلغائها');
+                        return;
                     }
-                } catch (error) {
-                    console.error('خطأ في الاتصال:', error);
-                    alert('حدث خطأ أثناء الاتصال بالخادم');
+
+                    if (!confirm('هل أنت متأكد من رغبتك في إلغاء التذكرة؟')) return;
+
+                    try {
+                        const response = await fetch('/api/tickets/cancel', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ticketId })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            alert('تم إلغاء التذكرة بنجاح');
+                            localStorage.removeItem('currentTicketId');
+                            location.reload();
+                        } else {
+                            alert('فشل إلغاء التذكرة: ' + (result.message || 'خطأ غير معروف'));
+                        }
+                    } catch (error) {
+                        console.error('خطأ في الاتصال:', error);
+                        alert('حدث خطأ أثناء الاتصال بالخادم');
+                    }
+                });
+            }
+        });
+
+        function updateClientTicketView(ticketData) {
+            if (!ticketData) return;
+
+            const ticketNumEl = document.querySelector('#ticketNumber');
+            if (ticketNumEl) {
+                ticketNumEl.innerHTML = `<span dir="ltr">#${ticketData.ticket_number || ticketData.sequence_num}</span>`;
+            }
+
+            const peopleAheadEl = document.querySelector('#peopleAhead');
+            const waitingCount = ticketData.people_ahead !== undefined ? ticketData.people_ahead : 0;
+            if (peopleAheadEl) {
+                peopleAheadEl.textContent = `${waitingCount} مراجعين`;
+            }
+
+            const averageMinutesPerPatient = 10; 
+            const estimatedMinutes = waitingCount * averageMinutesPerPatient;
+            
+            const timerDisplayEl = document.querySelector('#timerDisplay');
+            if (timerDisplayEl) {
+                if (waitingCount === 0) {
+                    timerDisplayEl.textContent = `دورك الآن!`;
+                } else {
+                    timerDisplayEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
                 }
-            });
+            }
         }
-    });
-    // دالة تحديث بيانات التذكرة ووقت الانتظار للعميل بناءً على تصميمك
-function updateClientTicketView(ticketData) {
-    if (!ticketData) return;
-
-    // 1. إصلاح اتجاه رقم التذكرة ليعرض بشكل صحيح مثل #A-1
-    const ticketNumEl = document.querySelector('#ticketNumber');
-    if (ticketNumEl) {
-        ticketNumEl.innerHTML = `<span dir="ltr">#${ticketData.ticket_number || ticketData.sequence_num}</span>`;
-    }
-
-    // 2. تحديث عدد المراجعين قبله
-    const peopleAheadEl = document.querySelector('#peopleAhead');
-    const waitingCount = ticketData.people_ahead !== undefined ? ticketData.people_ahead : 0;
-    if (peopleAheadEl) {
-        peopleAheadEl.textContent = `${waitingCount} مراجعين`;
-    }
-
-    // 3. تحديث وقت الانتظار الديناميكي في العنصر id="timerDisplay"
-    const averageMinutesPerPatient = 10; 
-    const estimatedMinutes = waitingCount * averageMinutesPerPatient;
-    
-    const timerDisplayEl = document.querySelector('#timerDisplay');
-    if (timerDisplayEl) {
-        if (waitingCount === 0) {
-            timerDisplayEl.textContent = `دورك الآن!`;
-        } else {
-            timerDisplayEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
-        }
-    }
-}
-</script>
+    </script>
 </body>
 </html>

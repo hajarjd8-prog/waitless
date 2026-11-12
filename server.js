@@ -5,55 +5,64 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const pool = require('./db');
+
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(cors());
 app.use(express.json());
 
-// POST /api/tickets/book
+// 1. مسار حجز تذكرة جديدة
 app.post('/api/tickets/book', async (req, res) => {
-  const { clinicId, patientName, serviceId } = req.body;
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const lastTicketQuery = `
-      SELECT sequence_num FROM tickets
-      WHERE clinic_id = $1 AND DATE(created_at) = CURRENT_DATE
-      ORDER BY sequence_num DESC
-      FOR UPDATE;
-    `;
-    const lastTicketRes = await client.query(lastTicketQuery, [clinicId]);
-    const nextSeq = (lastTicketRes.rows[0]?.sequence_num || 0) + 1;
-    const ticketNum = `A-${nextSeq}`;
+    const { clinicId, patientName, serviceId } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const lastTicketQuery = `
+            SELECT sequence_num FROM tickets
+            WHERE clinic_id = $1 AND DATE(created_at) = CURRENT_DATE
+            ORDER BY sequence_num DESC
+            FOR UPDATE;
+        `;
+        const lastTicketRes = await client.query(lastTicketQuery, [clinicId]);
+        const nextSeq = (lastTicketRes.rows[0]?.sequence_num || 0) + 1;
+        const ticketNum = `A-${nextSeq}`;
 
-    const insertQuery = `
-      INSERT INTO tickets (clinic_id, ticket_number, sequence_num, patient_name, status)
-      VALUES ($1, $2, $3, $4, 'waiting') RETURNING *;
-    `;
-    const newTicket = await client.query(insertQuery, [clinicId, ticketNum, nextSeq, patientName]);
-    await client.query('COMMIT');
+        const insertQuery = `
+            INSERT INTO tickets (clinic_id, ticket_number, sequence_num, patient_name, status)
+            VALUES ($1, $2, $3, $4, 'waiting') RETURNING *;
+        `;
+        const newTicket = await client.query(insertQuery, [clinicId, ticketNum, nextSeq, patientName || 'مراجع']);
+        await client.query('COMMIT');
 
-    io.to(clinicId).emit('queue_updated', { action: 'NEW_TICKET', ticket: newTicket.rows[0] });
-    return res.status(201).json({ success: true, ticket: newTicket.rows[0] });
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('خطأ مفصل في قاعدة البيانات:', error.message);
-    return res.status(500).json({ error: 'حدث خطأ أثناء حجز التذكرة' });
-  } finally {
-    client.release();
-  }
+        io.to(clinicId).emit('queue_updated', { action: 'NEW_TICKET', ticket: newTicket.rows[0] });
+        return res.status(201).json({ success: true, ticket: newTicket.rows[0] });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('خطأ مفصل في قاعدة البيانات:', error.message);
+        return res.status(500).json({ error: 'حدث خطأ أثناء حجز التذكرة' });
+    } finally {
+        client.release();
+    }
 });
 
-// 1. مسار استدعاء المريض التالي (تحديث قاعدة البيانات)
+// 2. مسار استدعاء المريض التالي (إنهاء الحالي وتحويل التالي إلى قيد الكشف)
 app.post('/api/clinics/:clinicId/call-next', async (req, res) => {
     const clinicId = req.params.clinicId;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+
+        // أرشفة أو إنهاء أي مريض كان قيد الكشف سابقاً
+        await client.query(
+            "UPDATE tickets SET status = 'completed' WHERE clinic_id = $1 AND status = 'in_consultation'",
+            [clinicId]
+        );
+
+        // استدعاء أول مريض ينتظر في الدور وتحويله إلى قيد الكشف
         const updateQuery = `
             UPDATE tickets 
-            SET status = 'called' 
+            SET status = 'in_consultation' 
             WHERE id = (
                 SELECT id FROM tickets 
                 WHERE clinic_id = $1 AND status = 'waiting' 
@@ -66,8 +75,10 @@ app.post('/api/clinics/:clinicId/call-next', async (req, res) => {
         await client.query('COMMIT');
         
         if (updatedTicket.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'لا يوجد مرقى في الانتظار حالياً' });
+            return res.status(404).json({ success: false, message: 'لا يوجد مراجعين في الانتظار حالياً' });
         }
+
+        io.to(clinicId).emit('queue_updated', { action: 'CALL_NEXT', ticket: updatedTicket.rows[0] });
         res.json({ success: true, ticket: updatedTicket.rows[0] });
     } catch (error) {
         await client.query('ROLLBACK');
@@ -76,7 +87,8 @@ app.post('/api/clinics/:clinicId/call-next', async (req, res) => {
         client.release();
     }
 });
-// مسار إلغاء التذكرة بواسطة العميل
+
+// 3. مسار إلغاء التذكرة بواسطة العميل
 app.post('/api/tickets/cancel', async (req, res) => {
     const { ticketId } = req.body;
     try {
@@ -94,7 +106,7 @@ app.post('/api/tickets/cancel', async (req, res) => {
     }
 });
 
-// 2. مسار جلب قائمة الانتظار الحقيقية للعيادة
+// 4. مسار جلب قائمة الانتظار الحقيقية للعيادة (بدون تكرار)
 app.get('/api/clinics/:clinicId/queue', async (req, res) => {
     const { clinicId } = req.params;
     try {
@@ -108,40 +120,29 @@ app.get('/api/clinics/:clinicId/queue', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// إعادة تفعيل مسار فتح لوحة التحكم كما كان سابقاً
-app.get('/dashboard', (req, res) => {
-    res.sendFile(__dirname + '/dashboard.html');
-});
-// 3. تشغيل السيرفر في النهاية
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-// مسار لجلب قائمة الانتظار الحقيقية للعيادة
-app.get('/api/clinics/:clinicId/queue', async (req, res) => {
-    const { clinicId } = req.params;
-    try {
-        const result = await pool.query(
-            "SELECT * FROM tickets WHERE clinic_id = $1 AND status IN ('waiting', 'in_consultation') ORDER BY created_at ASC",
-            [clinicId]
-        );
-        res.json({ success: true, queue: result.rows });
-    } catch (error) {
-        console.error("Error fetching queue:", error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-// 1. عند فتح الرابط الرئيسي للموقع، توجيه العميل لصفحة الحجز
+
+// 5. مسارات الواجهات والصفحات (HTML Routes)
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/client.html');
 });
 
-// 2. مسار فتح لوحة التحكم
+app.get('/client', (req, res) => {
+    res.sendFile(__dirname + '/client.html');
+});
+
 app.get('/dashboard', (req, res) => {
     res.sendFile(__dirname + '/dashboard.html');
 });
 
-// 3. مسار فتح صفحة العميل
-app.get('/client', (req, res) => {
-    res.sendFile(__dirname + '/client.html');
+// 6. Socket.io Connection Handler
+io.on('connection', (socket) => {
+    socket.on('join_clinic', (clinicId) => {
+        socket.join(clinicId);
+    });
+});
+
+// 7. تشغيل السيرفر
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
 });
