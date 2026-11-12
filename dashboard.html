@@ -114,54 +114,50 @@
     }
 });
 
-// دالة لجلب التذاكر الحقيقية وقائمة الانتظار من الخادم
-async function fetchQueueData() {
-    try {
-        const response = await fetch(`/api/clinics/${clinicId}/queue`);
-        const data = await response.json();
-        
-        if (data.success && data.queue) {
-            // العميل الحالي (الذي يتم الكشف عليه الآن)
-            const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue[0];
-            // باقي المرضى في قائمة الانتظار
-            const waitingPatients = data.queue.filter(t => t.status === 'waiting');
-
-            // تحديث العميل الحالي في الواجهة إذا وجد
-            if (currentPatient) {
-                const ticketNumElement = document.querySelector('main .text-6xl');
-                const patientNameElement = document.querySelector('main .text-lg');
-                if (ticketNumElement) ticketNumElement.textContent = `#${currentPatient.ticket_number}`;
-                if (patientNameElement) patientNameElement.textContent = `العميل: ${currentPatient.patient_name || 'مريض'}`;
-            }
-
-            // تحديث قائمة الانتظار في الواجهة
-            const waitingSection = document.querySelector('section.bg-slate-800');
-            if (waitingSection && waitingPatients.length > 0) {
-                // يمكنك توليد عناصر القائمة ديناميكياً هنا بناءً على بيانات waitingPatients
-                console.log("قائمة الانتظار المحدثة:", waitingPatients);
-            }
-        }
-    } catch (error) {
-        console.error('خطأ أثناء جلب قائمة الانتظار:', error);
-    }
-}
-
 // استدعاء الدالة فور فتح الصفحة
 fetchQueueData();
 async function fetchQueueData() {
     try {
-        // 
         const response = await fetch(`/api/clinics/${clinicId}/queue`);
         const data = await response.json();
         
         if (data.success && data.queue) {
+            // 1. العميل الحالي في العيادة
             const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue[0];
             
+            // 2. المريض التالي في الانتظار
+            const waitingPatients = data.queue.filter(t => t.status === 'waiting');
+            const nextPatient = waitingPatients.length > 0 ? waitingPatients[0] : null;
+            
+            // تحديث واجهة العميل الحالي
             if (currentPatient) {
                 const ticketNumElement = document.querySelector('main .text-6xl');
                 const patientNameElement = document.querySelector('main .text-lg');
-                if (ticketNumElement) ticketNumElement.textContent = `#${currentPatient.ticket_number || currentPatient.sequence_num}`;
-                if (patientNameElement) patientNameElement.textContent = `العميل: ${currentPatient.patient_name || 'مريض'}`;
+                if (ticketNumElement) {
+                    ticketNumElement.textContent = `#${currentPatient.ticket_number || currentPatient.sequence_num}`;
+                }
+                if (patientNameElement) {
+                    const realName = currentPatient.patient_name && currentPatient.patient_name.trim() !== "" 
+                        ? currentPatient.patient_name 
+                        : 'مريض';
+                    patientNameElement.textContent = `العميل: ${realName}`;
+                }
+            } else {
+                const ticketNumElement = document.querySelector('main .text-6xl');
+                const patientNameElement = document.querySelector('main .text-lg');
+                if (ticketNumElement) ticketNumElement.textContent = `--`;
+                if (patientNameElement) patientNameElement.textContent = `العميل: لا يوجد منتظرين حالياً`;
+            }
+
+            // تحديث نص زر "استدعاء التالي" برقم التذكرة القادمة ديناميكياً
+            const callNextBtn = document.querySelector('button.bg-emerald-600'); // أو محدد زر الاستدعاء لديك
+            if (callNextBtn) {
+                if (nextPatient) {
+                    const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
+                    callNextBtn.textContent = `استدعاء التالي (#${nextNum})`;
+                } else {
+                    callNextBtn.textContent = `استدعاء التالي (لا يوجد منتظرين)`;
+                }
             }
         }
     } catch (error) {

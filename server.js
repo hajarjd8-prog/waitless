@@ -76,6 +76,23 @@ app.post('/api/clinics/:clinicId/call-next', async (req, res) => {
         client.release();
     }
 });
+// مسار إلغاء التذكرة بواسطة العميل
+app.post('/api/tickets/cancel', async (req, res) => {
+    const { ticketId } = req.body;
+    try {
+        const result = await pool.query(
+            "UPDATE tickets SET status = 'cancelled' WHERE id = $1 RETURNING *",
+            [ticketId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'التذكرة غير موجودة' });
+        }
+        res.json({ success: true, message: 'تم إلغاء التذكرة بنجاح' });
+    } catch (error) {
+        console.error("Error cancelling ticket:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // 2. مسار جلب قائمة الانتظار الحقيقية للعيادة
 app.get('/api/clinics/:clinicId/queue', async (req, res) => {

@@ -170,14 +170,14 @@
                         <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
                             <i class="fa-regular fa-clock text-brand-500 mb-1 text-sm"></i>
                             <span class="text-[11px] text-slate-400 block">وقت الانتظار التقديري</span>
-                            <div id="timerDisplay" class="text-xl font-bold text-white mt-0.5">14:58 د</div>
+                            <div id="waitTime" class="text-xl font-bold text-white mt-0.5">14:58 د</div>
                         </div>
 
                         <!-- Metric 2: Queue Position -->
                         <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50 text-center">
                             <i class="fa-solid fa-users text-indigo-400 mb-1 text-sm"></i>
                             <span class="text-[11px] text-slate-400 block">قبلك في الطابور</span>
-                            <div id="queueCount" class="text-xl font-bold text-indigo-300 mt-0.5">3 مراجعين</div>
+                            <div id="peopleAhead" class="text-xl font-bold text-indigo-300 mt-0.5">3 مراجعين</div>
                         </div>
                     </div>
 
@@ -194,8 +194,8 @@
                         <i class="fa-solid fa-qrcode text-lg text-slate-400"></i>
                         <span>رمز التأكيد والمتابعة</span>
                     </div>
-                    <button onclick="resetTicket()" class="text-rose-400 hover:text-rose-300 font-bold transition">
-                        إلغاء التذكرة
+                    <button id="cancel-ticket-btn" class="text-rose-400 hover:text-rose-300 font-bold">
+                       إلغاء التذكرة
                     </button>
                 </div>
             </div>
@@ -264,9 +264,15 @@
                     prefix: prefix
                 })
             })
-            .then(response => response.text())
-            .then(data => console.log('رد الخادم:', data))
-            .catch(error => console.error('خطأ في الاتصال:', error));
+           .then(response => response.json())
+    .then(data => {
+        console.log('رد الخادم:', data);
+        if (data.success && data.ticket) {
+            // تخزين معرف التذكرة هنا لتمكين العميل من إلغائها لاحقاً
+            localStorage.setItem('currentTicketId', data.ticket.id);
+        }
+    })
+    .catch(error => console.error('خطأ في الاتصال:', error));
         }
 
         function issueticket(serviceName, prefix) {
@@ -296,5 +302,73 @@
             document.getElementById('serviceSelectionSection').classList.remove('hidden');
         }
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cancelBtn = document.querySelector('#cancel-ticket-btn'); 
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', async () => {
+                const ticketId = localStorage.getItem('currentTicketId');
+                
+                if (!ticketId) {
+                    alert('لا توجد تذكرة نشطة حالياً لإلغائها');
+                    return;
+                }
+
+                if (!confirm('هل أنت متأكد من رغبتك في إلغاء التذكرة؟')) return;
+
+                try {
+                    const response = await fetch('/api/tickets/cancel', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ticketId })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('تم إلغاء التذكرة بنجاح');
+                        localStorage.removeItem('currentTicketId'); // مسح المعرف بعد الإلغاء
+                        location.reload(); // تحديث الصفحة
+                    } else {
+                        alert('فشل إلغاء التذكرة: ' + (result.message || 'خطأ غير معروف'));
+                    }
+                } catch (error) {
+                    console.error('خطأ في الاتصال:', error);
+                    alert('حدث خطأ أثناء الاتصال بالخادم');
+                }
+            });
+        }
+    });
+    // دالة تحديث بيانات التذكرة ووقت الانتظار للعميل بناءً على تصميمك
+function updateClientTicketView(ticketData) {
+    if (!ticketData) return;
+
+    // 1. تحديث رقم التذكرة (مطابق للـ id الموجود في السطر 161 لديك)
+    const ticketNumEl = document.querySelector('#ticketNumber');
+    if (ticketNumEl) {
+        ticketNumEl.textContent = `#${ticketData.ticket_number || ticketData.sequence_num}`;
+    }
+
+    // 2. تحديث عدد المنتظرين قبله
+    const peopleAheadEl = document.querySelector('#peopleAhead');
+    const waitingCount = ticketData.people_ahead !== undefined ? ticketData.people_ahead : 0;
+    if (peopleAheadEl) {
+        peopleAheadEl.textContent = `${waitingCount} مراجعين`;
+    }
+
+    // 3. حساب وتحديث وقت الانتظار التقديري (10 دقائق لكل مريض)
+    const averageMinutesPerPatient = 10; 
+    const estimatedMinutes = waitingCount * averageMinutesPerPatient;
+    
+    const waitTimeEl = document.querySelector('#waitTime');
+    if (waitTimeEl) {
+        if (waitingCount === 0) {
+            waitTimeEl.textContent = `دورك الآن!`;
+        } else {
+            waitTimeEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
+        }
+    }
+}
+</script>
 </body>
 </html>
