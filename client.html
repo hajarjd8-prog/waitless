@@ -343,29 +343,29 @@
 function updateClientTicketView(ticketData) {
     if (!ticketData) return;
 
-    // 1. تحديث رقم التذكرة (مطابق للـ id الموجود في السطر 161 لديك)
+    // 1. إصلاح اتجاه رقم التذكرة ليعرض بشكل صحيح مثل #A-1
     const ticketNumEl = document.querySelector('#ticketNumber');
     if (ticketNumEl) {
-        ticketNumEl.textContent = `#${ticketData.ticket_number || ticketData.sequence_num}`;
+        ticketNumEl.innerHTML = `<span dir="ltr">#${ticketData.ticket_number || ticketData.sequence_num}</span>`;
     }
 
-    // 2. تحديث عدد المنتظرين قبله
+    // 2. تحديث عدد المراجعين قبله
     const peopleAheadEl = document.querySelector('#peopleAhead');
     const waitingCount = ticketData.people_ahead !== undefined ? ticketData.people_ahead : 0;
     if (peopleAheadEl) {
         peopleAheadEl.textContent = `${waitingCount} مراجعين`;
     }
 
-    // 3. حساب وتحديث وقت الانتظار التقديري (10 دقائق لكل مريض)
+    // 3. تحديث وقت الانتظار الديناميكي في العنصر id="timerDisplay"
     const averageMinutesPerPatient = 10; 
     const estimatedMinutes = waitingCount * averageMinutesPerPatient;
     
-    const waitTimeEl = document.querySelector('#waitTime');
-    if (waitTimeEl) {
+    const timerDisplayEl = document.querySelector('#timerDisplay');
+    if (timerDisplayEl) {
         if (waitingCount === 0) {
-            waitTimeEl.textContent = `دورك الآن!`;
+            timerDisplayEl.textContent = `دورك الآن!`;
         } else {
-            waitTimeEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
+            timerDisplayEl.textContent = `${estimatedMinutes} دقيقة تقريباً`;
         }
     }
 }

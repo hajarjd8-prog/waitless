@@ -126,8 +126,19 @@ async function fetchQueueData() {
             const currentPatient = data.queue.find(t => t.status === 'in_consultation') || data.queue[0];
             
             // 2. المريض التالي في الانتظار
-            const waitingPatients = data.queue.filter(t => t.status === 'waiting');
-            const nextPatient = waitingPatients.length > 0 ? waitingPatients[0] : null;
+const waitingPatients = data.queue.filter(t => t.status === 'waiting');
+// التأكد من أن المريض التالي ليس هو نفسه العميل الحالي
+const nextPatient = waitingPatients.length > 0 ? waitingPatients[0] : null;
+
+const callNextBtn = document.querySelector('button.bg-emerald-600');
+if (callNextBtn) {
+    if (nextPatient) {
+        const nextNum = nextPatient.ticket_number || nextPatient.sequence_num;
+        callNextBtn.textContent = `استدعاء التالي (#${nextNum})`;
+    } else {
+        callNextBtn.textContent = `استدعاء التالي (لا يوجد منتظرين)`;
+    }
+}
             
             // تحديث واجهة العميل الحالي
             if (currentPatient) {
